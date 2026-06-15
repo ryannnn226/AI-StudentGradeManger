@@ -102,7 +102,8 @@ namespace StudentGradeManager.Forms
                 AllowUserToAddRows = false, ReadOnly = true,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
                 EnableHeadersVisualStyles = false,
-                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle { BackColor = Color.FromArgb(248, 250, 252), ForeColor = C_TEXT_LIGHT, Font = new Font("Microsoft YaHei", 9, FontStyle.Bold), Padding = new Padding(0, 6, 0, 6) },
+                ColumnHeadersHeight = 44,
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle { BackColor = Color.FromArgb(248, 250, 252), ForeColor = C_TEXT_LIGHT, Font = new Font("Microsoft YaHei", 10, FontStyle.Bold), Padding = new Padding(8, 10, 8, 10) },
                 DefaultCellStyle = new DataGridViewCellStyle { BackColor = C_WHITE, ForeColor = C_TEXT, Font = new Font("Microsoft YaHei", 9), SelectionBackColor = Color.FromArgb(219, 234, 254), SelectionForeColor = C_TEXT, Padding = new Padding(4) },
                 AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle { BackColor = Color.FromArgb(248, 250, 252) },
                 RowTemplate = new DataGridViewRow { Height = 34 }
