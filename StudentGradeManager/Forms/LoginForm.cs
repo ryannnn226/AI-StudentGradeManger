@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -147,7 +147,7 @@ namespace StudentGradeManager.Forms
                     _ => new StudentMainForm(_auth, _studentSvc, _courseSvc, _gradeSvc, _statsSvc, _aiSvc)
                 };
                 this.Hide();
-                main.FormClosed += (s2, args) => this.Close();
+                main.FormClosed += (s2, args) => { this.Show(); txtUser.Clear(); txtPass.Clear(); };
                 main.Show();
             }
             else

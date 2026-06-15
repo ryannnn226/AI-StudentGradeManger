@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -15,6 +15,7 @@ namespace StudentGradeManager.Forms
         private readonly GradeService _grdSvc;
         private readonly StatisticsService _sttSvc;
         private readonly AIService _aiSvc;
+        
 
         static readonly Color C_BG = Color.FromArgb(245, 247, 250);
         static readonly Color C_WHITE = Color.White;
@@ -22,6 +23,7 @@ namespace StudentGradeManager.Forms
         static readonly Color C_GREEN = Color.FromArgb(16, 185, 129);
         static readonly Color C_TEXT = Color.FromArgb(30, 41, 59);
         static readonly Color C_TEXT_LIGHT = Color.FromArgb(100, 116, 139);
+        
 
         public TeacherMainForm(AuthService auth, StudentService ss, CourseService cs,
             GradeService gs, StatisticsService sts, AIService ai)
@@ -51,6 +53,16 @@ namespace StudentGradeManager.Forms
             var topBar = new Panel { Dock = DockStyle.Top, Height = 48, BackColor = C_WHITE };
             topBar.Paint += (s, e) => e.Graphics.DrawLine(new Pen(Color.FromArgb(226, 232, 240)), 0, 47, topBar.Width, 47);
             topBar.Controls.Add(new Label { Text = "教师工作台", Font = new Font("Microsoft YaHei", 14, FontStyle.Bold), ForeColor = C_TEXT, Location = new Point(20, 10), Size = new Size(200, 28) });
+            var btnLogout = new Button { Text = "退出登录", Font = new Font("Microsoft YaHei", 8), Size = new Size(72, 26), Location = new Point(topBar.Width - 100, 11), FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(239, 68, 68), BackColor = Color.Transparent, Cursor = Cursors.Hand, Anchor = AnchorStyles.Right };
+            btnLogout.FlatAppearance.BorderSize = 0;
+            btnLogout.Click += (s, e) => { if (MessageBox.Show("确定要退出登录吗？", "退出", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) this.Close(); };
+            topBar.Controls.Add(btnLogout);
+            var btnLogoutT = new Button { Text = "退出登录", Font = new Font("Microsoft YaHei", 8), Size = new Size(75, 26), FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(239, 68, 68), BackColor = Color.Transparent, Cursor = Cursors.Hand };
+            btnLogoutT.FlatAppearance.BorderSize = 0;
+            btnLogoutT.Location = new Point(topBar.Width - 100, 11);
+            topBar.Paint += (s, e) => { btnLogoutT.Location = new Point(topBar.Width - 95, 11); };
+            btnLogoutT.Click += (s, e) => { if (MessageBox.Show("确定要退出登录吗？", "退出", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) this.Close(); };
+            topBar.Controls.Add(btnLogoutT);
 
             var sidebar = new Panel { Dock = DockStyle.Left, Width = 180, BackColor = Color.FromArgb(30, 41, 59) };
             sidebar.Controls.Add(new Label { Text = "功能菜单", Font = new Font("Microsoft YaHei", 9), ForeColor = Color.FromArgb(148, 163, 184), Location = new Point(16, 16), Size = new Size(150, 24) });
@@ -96,11 +108,17 @@ namespace StudentGradeManager.Forms
             dgv.Width = content.ClientSize.Width - 16;
             content.Resize += (s, e) => dgv.Width = content.ClientSize.Width - 16;
             dgv.Height = 400;
-            var btnRef = new Button { Text = "刷新统计", Location = new Point(0, 418), Size = new Size(120, 35), FlatStyle = FlatStyle.Flat, BackColor = C_BLUE, ForeColor = Color.White, Font = new Font("Microsoft YaHei", 9), Cursor = Cursors.Hand }; btnRef.FlatAppearance.BorderSize = 0;
+            var bar = new FlowLayoutPanel { Location = new Point(0, 418), Size = new Size(300, 35), Anchor = AnchorStyles.Bottom | AnchorStyles.Left };
+            var btnRef = new Button { Text = "刷新统计", Size = new Size(110, 35), FlatStyle = FlatStyle.Flat, BackColor = C_BLUE, ForeColor = Color.White, Font = new Font("Microsoft YaHei", 9), Cursor = Cursors.Hand }; btnRef.FlatAppearance.BorderSize = 0;
+            var btnChart = new Button { Text = "📊 查看图表", Size = new Size(120, 35), FlatStyle = FlatStyle.Flat, BackColor = C_GREEN, ForeColor = Color.White, Font = new Font("Microsoft YaHei", 9), Cursor = Cursors.Hand, UseVisualStyleBackColor = false }; btnChart.FlatAppearance.BorderSize = 0;
+            bar.Controls.Add(btnRef); bar.Controls.Add(btnChart);
             btnRef.Click += (s, e) => { var st = _sttSvc.GetStatsByCourse(); dgv.DataSource = null; dgv.DataSource = st.Select(x => new { x.CourseName, 平均分 = x.AverageScore, 最高分 = x.MaxScore, 最低分 = x.MinScore, 学生数 = x.TotalStudents, 及格人数 = x.PassCount, 及格率 = x.PassRate + "%" }).ToList(); AutoFitGrid(dgv); };
-            ps.Controls.Add(dgv); ps.Controls.Add(btnRef);
-
-            // ---- AI 分析 ----
+            btnChart.Click += (s, e) => { var f = new ChartsForm(_sttSvc, _crsSvc); f.ShowDialog(this); };
+            ps.Controls.Add(dgv); ps.Controls.Add(bar);
+            var stInit = _sttSvc.GetStatsByCourse();
+            dgv.DataSource = stInit.Select(x => new { x.CourseName, 平均分 = x.AverageScore, 最高分 = x.MaxScore, 最低分 = x.MinScore, 学生数 = x.TotalStudents, 及格人数 = x.PassCount, 及格率 = x.PassRate + "%" }).ToList();
+            AutoFitGrid(dgv);
+// ---- AI 分析 ----
             var pa = panels[2];
             var aiCard = new Panel { Location = new Point(0, 8), BackColor = C_WHITE, Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
             aiCard.Width = content.ClientSize.Width - 16;
@@ -122,5 +140,6 @@ namespace StudentGradeManager.Forms
             btns[0].BackColor = C_BLUE; panels[0].Visible = true;
             for (int i = 1; i < 3; i++) panels[i].Visible = false;
         }
+   
     }
 }

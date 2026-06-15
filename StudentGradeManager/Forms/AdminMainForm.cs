@@ -8,6 +8,84 @@ using StudentGradeManager.Services;
 
 namespace StudentGradeManager.Forms
 {
+    /// <summary>GDI+ 手绘柱状图</summary>
+    public class BarChartPanel : Panel
+    {
+        private List<(string Label, double Value, Color Color)> _data = new();
+        private string _title = "", _xAxis = "";
+        private const int PL = 38, PR = 12, PT = 16, PB = 24;
+
+        public void SetData(string title, string xAxis, List<(string Label, double Value, Color Color)> data)
+        { _title = title; _xAxis = xAxis; _data = data; Invalidate(); }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            var g = e.Graphics;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.Clear(Color.White);
+
+            if (_data.Count == 0)
+            {
+                g.DrawString("暂无数据", new Font("Microsoft YaHei", 10), Brushes.Gray,
+                    new RectangleF(0, 0, Width, Height),
+                    new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+                return;
+            }
+
+            int cw = Math.Max(1, Width - PL - PR);
+            int ch = Math.Max(1, Height - PT - PB);
+            double maxV = _data.Max(d => d.Value);
+            if (maxV == 0) maxV = 100;
+
+            int barW = Math.Min(60, Math.Max(20, cw / _data.Count - 12));
+            int gap = (cw - barW * _data.Count) / (_data.Count + 1);
+
+            using var tFont = new Font("Microsoft YaHei", 8, FontStyle.Bold);
+            g.DrawString(_title, tFont, new SolidBrush(Color.FromArgb(30, 41, 59)),
+                new RectangleF(0, 0, Width, 16),
+                new StringFormat { Alignment = StringAlignment.Center });
+
+            using var kFont = new Font("Microsoft YaHei", 6.5f);
+            using var tPen = new Pen(Color.FromArgb(230, 235, 240));
+            using var aPen = new Pen(Color.FromArgb(200, 205, 210));
+
+            for (int i = 0; i <= 5; i++)
+            {
+                int y = PT + ch - ch * i / 5;
+                double val = Math.Round(maxV * i / 5, 0);
+                g.DrawString(val.ToString(), kFont, Brushes.Gray,
+                    new RectangleF(0, y - 9, PL - 6, 18),
+                    new StringFormat { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center });
+                if (i > 0) g.DrawLine(tPen, PL, y, PL + cw, y);
+            }
+            g.DrawLine(aPen, PL, PT, PL, PT + ch);
+            g.DrawLine(aPen, PL, PT + ch, PL + cw, PT + ch);
+
+            for (int i = 0; i < _data.Count; i++)
+            {
+                int x = PL + gap + i * (barW + gap);
+                int bh = Math.Max(1, (int)(ch * _data[i].Value / maxV));
+                int y = PT + ch - bh;
+                var bar = new Rectangle(x, y, barW, bh);
+
+                using var br = new System.Drawing.Drawing2D.LinearGradientBrush(bar,
+                    _data[i].Color, ControlPaint.Light(_data[i].Color),
+                    System.Drawing.Drawing2D.LinearGradientMode.Vertical);
+                g.FillRectangle(br, bar);
+                g.DrawRectangle(new Pen(ControlPaint.Dark(_data[i].Color)), bar);
+
+                g.DrawString(_data[i].Value.ToString("F1"),
+                    new Font("Microsoft YaHei", 6.5f, FontStyle.Bold), Brushes.Black,
+                    new RectangleF(x, y - 13, barW, 12),
+                    new StringFormat { Alignment = StringAlignment.Center });
+
+                g.DrawString(_data[i].Label, kFont, Brushes.Gray,
+                    new RectangleF(x - 8, PT + ch + 2, barW + 16, 22),
+                    new StringFormat { Alignment = StringAlignment.Center });
+            }
+        }
+    }
     public class AdminMainForm : Form
     {
         private readonly AuthService _auth;
@@ -23,6 +101,7 @@ namespace StudentGradeManager.Forms
 
         private DataGridView dgvStu = null!, dgvCrs = null!, dgvGrd = null!, dgvUsr = null!, dgvStats = null!;
         private RichTextBox rtbAI = null!;
+        
         private ComboBox cmbAIStu = null!;
 
         public AdminMainForm(AuthService auth, StudentService ss, CourseService cs,
@@ -42,6 +121,7 @@ namespace StudentGradeManager.Forms
         static readonly Color C_RED = Color.FromArgb(239, 68, 68);
         static readonly Color C_TEXT = Color.FromArgb(30, 41, 59);
         static readonly Color C_TEXT_LIGHT = Color.FromArgb(100, 116, 139);
+        
 
         private void InitUI()
         {
@@ -68,6 +148,11 @@ namespace StudentGradeManager.Forms
                 btn.Click += NavClick;
                 navButtons[i] = btn;
                 sidebar.Controls.Add(btn);
+
+            var btnLogout = new Button { Text = "退出登录", Font = new Font("Microsoft YaHei", 9), Size = new Size(185, 40), Location = new Point(8, 70 + navItems.Length * 52 + 16), FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(248, 113, 113), TextAlign = ContentAlignment.MiddleLeft, Cursor = Cursors.Hand };
+            btnLogout.FlatAppearance.BorderSize = 0;
+            btnLogout.Click += (s, e) => { if (MessageBox.Show("确定要退出登录吗？", "退出", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) this.Close(); };
+            sidebar.Controls.Add(btnLogout);
             }
             sidebar.Controls.Add(new Label { Text = "导航菜单", Font = new Font("Microsoft YaHei", 9), ForeColor = Color.FromArgb(148, 163, 184), Location = new Point(20, 20), Size = new Size(160, 24) });
 
@@ -270,23 +355,20 @@ namespace StudentGradeManager.Forms
             overviewCard.Controls.Add(lblOverview);
 
             dgvStats = MakeGrid();
-            dgvStats.Location = new Point(12, 100); dgvStats.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
-            dgvStats.Width = card.Width - 350; dgvStats.Height = card.Height - 165;
-            card.Resize += (s, e) => { overviewCard.Width = card.Width - 24; dgvStats.Width = card.Width - 350; dgvStats.Height = card.Height - 165; };
+            dgvStats.Location = new Point(12, 100); dgvStats.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dgvStats.Width = card.Width - 24; dgvStats.Height = card.Height - 165;
+            card.Resize += (s, e) => { overviewCard.Width = card.Width - 24; dgvStats.Width = card.Width - 24; dgvStats.Height = card.Height - 165; };
 
-            var rankPanel = new Panel { Location = new Point(dgvStats.Width + 25, 100), Size = new Size(300, dgvStats.Height), BackColor = Color.FromArgb(248, 250, 252), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left };
-            var lstRank = new ListBox { Location = new Point(12, 45), Size = new Size(275, rankPanel.Height - 100), Font = new Font("Microsoft YaHei", 10), BorderStyle = BorderStyle.None, BackColor = Color.FromArgb(248, 250, 252), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
-            var btnRank = MakeBtn("刷新排名", C_BLUE); btnRank.Location = new Point(12, rankPanel.Height - 50); btnRank.Size = new Size(275, 35); btnRank.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnRank.Click += (s, e) => { lstRank.Items.Clear(); var ranks = _sttSvc.GetStatsByClass(); for (int i = 0; i < ranks.Count; i++) lstRank.Items.Add("第" + (i + 1) + "名  " + ranks[i].ClassName + "  均分 " + ranks[i].AvgScore); };
-            card.Resize += (s, e) => { rankPanel.Height = card.Height - 165; rankPanel.Location = new Point(dgvStats.Width + 25, 100); lstRank.Height = rankPanel.Height - 100; btnRank.Location = new Point(12, rankPanel.Height - 50); };
-            rankPanel.Controls.Add(new Label { Text = "班级排名", Font = new Font("Microsoft YaHei", 11, FontStyle.Bold), ForeColor = C_TEXT, Location = new Point(12, 12), Size = new Size(280, 26) });
-            rankPanel.Controls.Add(lstRank); rankPanel.Controls.Add(btnRank);
+            var btnChart = MakeBtn("📊 查看图表", C_GREEN);
+            btnChart.Location = new Point(12, card.Height - 50); btnChart.Size = new Size(140, 32);
+            btnChart.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            btnChart.Click += (s, e) => { var f = new ChartsForm(_sttSvc, _crsSvc); f.ShowDialog(this); };
 
             var btnRefresh = MakeBtn("刷新统计", C_BLUE);
-            btnRefresh.Location = new Point(12, card.Height - 55); btnRefresh.Size = new Size(dgvStats.Width, 35);
-            btnRefresh.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            card.Resize += (s, e) => { btnRefresh.Location = new Point(12, card.Height - 55); btnRefresh.Width = dgvStats.Width; };
-            btnRefresh.Click += (s, e) => {
+            btnRefresh.Location = new Point(162, card.Height - 50); btnRefresh.Size = new Size(120, 32);
+            btnRefresh.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            btnRefresh.Click += (s, e) =>
+            {
                 var ov = _sttSvc.GetOverallStats();
                 lblOverview.Text = "  成绩总数：" + ov.TotalGrades + "    学生总数：" + ov.TotalStudents + "    课程总数：" + ov.TotalCourses + "    总平均分：" + ov.OverallAverage;
                 var st = _sttSvc.GetStatsByCourse();
@@ -294,11 +376,12 @@ namespace StudentGradeManager.Forms
                 dgvStats.DataSource = st.Select(x => new { x.CourseName, 平均分 = x.AverageScore, 最高分 = x.MaxScore, 最低分 = x.MinScore, 学生数 = x.TotalStudents, 及格人数 = x.PassCount, 及格率 = x.PassRate + "%" }).ToList();
                 AutoFitGrid(dgvStats);
             };
-            card.Controls.Add(overviewCard); card.Controls.Add(dgvStats); card.Controls.Add(rankPanel); card.Controls.Add(btnRefresh);
+            card.Resize += (s, e) => { btnChart.Location = new Point(12, card.Height - 50); btnRefresh.Location = new Point(162, card.Height - 50); };
+
+            card.Controls.Add(overviewCard); card.Controls.Add(dgvStats); card.Controls.Add(btnChart); card.Controls.Add(btnRefresh);
             contentPanel.Controls.Add(card);
         }
-
-        // ============ AI 分析 ============
+// ============ AI 分析 ============
         void BuildAIPanel()
         {
             var card = MakeResponsiveCard(60);

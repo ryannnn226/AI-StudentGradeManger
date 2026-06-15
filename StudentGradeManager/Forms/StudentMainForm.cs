@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -58,6 +58,11 @@ namespace StudentGradeManager.Forms
 
             var sidebar = new Panel { Dock = DockStyle.Left, Width = 180, BackColor = Color.FromArgb(30, 41, 59) };
             sidebar.Controls.Add(new Label { Text = "功能菜单", Font = new Font("Microsoft YaHei", 9), ForeColor = Color.FromArgb(148, 163, 184), Location = new Point(16, 16), Size = new Size(150, 24) });
+            // 退出登录
+            var btnLogout = new Button { Text = "退出登录", Font = new Font("Microsoft YaHei", 9), Size = new Size(165, 40), Location = new Point(8, 60 + 2 * 50 + 16), FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(248, 113, 113), TextAlign = ContentAlignment.MiddleLeft, Cursor = Cursors.Hand };
+            btnLogout.FlatAppearance.BorderSize = 0;
+            btnLogout.Click += (s, e) => { if (MessageBox.Show("确定要退出登录吗？", "退出", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) this.Close(); };
+            sidebar.Controls.Add(btnLogout);
 
             var panels = new Panel[] { new Panel(), new Panel() };
             var btns = new Button[2];
@@ -84,11 +89,11 @@ namespace StudentGradeManager.Forms
             dgv = new DataGridView { Location = new Point(16, 52), BackgroundColor = C_WHITE, BorderStyle = BorderStyle.None, GridColor = Color.FromArgb(241, 245, 249), RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AllowUserToAddRows = false, ReadOnly = true, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None, EnableHeadersVisualStyles = false, ColumnHeadersHeight = 44,
                 ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle { BackColor = Color.FromArgb(248, 250, 252), ForeColor = Color.FromArgb(100, 116, 139), Font = new Font("Microsoft YaHei", 10, FontStyle.Bold), Padding = new Padding(8, 10, 8, 10) }, DefaultCellStyle = new DataGridViewCellStyle { BackColor = C_WHITE, ForeColor = C_TEXT, Font = new Font("Microsoft YaHei", 9), Padding = new Padding(4) }, AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle { BackColor = Color.FromArgb(248, 250, 252) }, RowTemplate = new DataGridViewRow { Height = 34 }, Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
             dgv.Width = card1.Width - 32;
-            dgv.Height = card1.Height - 105;
+            dgv.Height = card1.Height - 130;
             var btnRef = new Button { Text = "刷新成绩", Size = new Size(110, 35), FlatStyle = FlatStyle.Flat, BackColor = C_BLUE, ForeColor = Color.White, Font = new Font("Microsoft YaHei", 9), Cursor = Cursors.Hand, Anchor = AnchorStyles.Bottom | AnchorStyles.Left };
-            btnRef.FlatAppearance.BorderSize = 0; btnRef.Location = new Point(16, dgv.Bottom + 8);
+            btnRef.FlatAppearance.BorderSize = 0; btnRef.Location = new Point(16, dgv.Bottom + 4);
             btnRef.Click += (s, e) => RefreshGrades();
-            card1.Resize += (s, e) => { lblInfo.Width = card1.Width - 32; dgv.Width = card1.Width - 32; dgv.Height = card1.Height - 105; btnRef.Location = new Point(16, dgv.Bottom + 8); };
+            card1.Resize += (s, e) => { lblInfo.Width = card1.Width - 32; dgv.Width = card1.Width - 32; dgv.Height = card1.Height - 130; btnRef.Location = new Point(16, dgv.Bottom + 4); };
             card1.Controls.Add(lblInfo); card1.Controls.Add(dgv); card1.Controls.Add(btnRef);
             pg.Controls.Add(card1);
 
@@ -100,8 +105,8 @@ namespace StudentGradeManager.Forms
             content.Resize += (s, e) => { aiCard.Width = content.ClientSize.Width - 16; aiCard.Height = content.ClientSize.Height - 16; };
 
             var bar = new FlowLayoutPanel { Location = new Point(16, 12), Size = new Size(aiCard.Width - 32, 36), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            var btnTrend = new Button { Text = "AI 成绩波动分析", Size = new Size(150, 32), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(30, 41, 59), ForeColor = Color.White, Font = new Font("Microsoft YaHei", 9), Cursor = Cursors.Hand }; btnTrend.FlatAppearance.BorderSize = 0;
-            var btnComment = new Button { Text = "AI 生成学期评语", Size = new Size(150, 32), FlatStyle = FlatStyle.Flat, BackColor = C_BLUE, ForeColor = Color.White, Font = new Font("Microsoft YaHei", 9), Cursor = Cursors.Hand }; btnComment.FlatAppearance.BorderSize = 0;
+            var btnTrend = new Button { Text = "AI 成绩波动分析", Size = new Size(150, 32), FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(30, 41, 59), ForeColor = Color.White, Font = new Font("Microsoft YaHei", 9), Cursor = Cursors.Hand, Anchor = AnchorStyles.Bottom | AnchorStyles.Left }; btnTrend.FlatAppearance.BorderSize = 0;
+            var btnComment = new Button { Text = "AI 生成学期评语", Size = new Size(150, 32), FlatStyle = FlatStyle.Flat, BackColor = C_BLUE, ForeColor = Color.White, Font = new Font("Microsoft YaHei", 9), Cursor = Cursors.Hand, Anchor = AnchorStyles.Bottom | AnchorStyles.Left }; btnComment.FlatAppearance.BorderSize = 0;
             bar.Controls.AddRange(new Control[] { btnTrend, btnComment });
             rtbAI = new RichTextBox { Location = new Point(16, 55), Font = new Font("Microsoft YaHei", 10), ReadOnly = true, BorderStyle = BorderStyle.None, BackColor = Color.FromArgb(248, 250, 252), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
             rtbAI.Width = aiCard.Width - 32; rtbAI.Height = aiCard.Height - 70;
