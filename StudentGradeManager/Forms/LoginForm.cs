@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using StudentGradeManager.Services;
 
@@ -14,7 +15,6 @@ namespace StudentGradeManager.Forms
         private readonly StatisticsService _statsSvc;
         private readonly AIService _aiSvc;
         private TextBox txtUser = null!, txtPass = null!;
-        private Button btnLogin = null!;
 
         public LoginForm(AuthService auth, StudentService ss, CourseService cs,
             GradeService gs, StatisticsService sts, AIService ai)
@@ -26,54 +26,105 @@ namespace StudentGradeManager.Forms
 
         private void InitUI()
         {
-            this.Text = "AI 智能学生成绩管理系统 - 登录";
-            this.Size = new Size(450, 360);
+            this.Text = "AI 智能学生成绩管理系统";
+            this.Size = new Size(480, 420);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            this.BackColor = Color.FromArgb(240, 242, 245);
+            this.BackColor = Color.FromArgb(245, 247, 250);
 
+            // 主卡片
+            var card = new Panel
+            {
+                Size = new Size(380, 320),
+                Location = new Point(50, 35),
+                BackColor = Color.White,
+            };
+            card.Paint += (s, e) =>
+            {
+                var r = new Rectangle(0, 0, card.Width - 1, card.Height - 1);
+                using var pen = new Pen(Color.FromArgb(225, 230, 235), 1);
+                e.Graphics.DrawRectangle(pen, r);
+            };
+
+            // 标题
             var title = new Label
             {
-                Text = "AI 智能学生成绩管理系统",
-                Font = new Font("Microsoft YaHei", 16, FontStyle.Bold),
+                Text = "AI 智能成绩管理",
+                Font = new Font("Microsoft YaHei", 18, FontStyle.Bold),
                 ForeColor = Color.FromArgb(44, 62, 80),
-                Size = new Size(380, 40),
-                Location = new Point(35, 25),
+                Size = new Size(300, 35),
+                Location = new Point(40, 25),
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            var lblUser = new Label { Text = "用户名：", Font = new Font("Microsoft YaHei", 10), Location = new Point(65, 95), Size = new Size(80, 25) };
-            txtUser = new TextBox { Font = new Font("Microsoft YaHei", 10), Location = new Point(150, 95), Size = new Size(220, 25), PlaceholderText = "请输入用户名" };
+            var subtitle = new Label
+            {
+                Text = "Student Grade Management System",
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                ForeColor = Color.FromArgb(150, 160, 170),
+                Size = new Size(300, 20),
+                Location = new Point(40, 58),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
 
-            var lblPass = new Label { Text = "密  码：", Font = new Font("Microsoft YaHei", 10), Location = new Point(65, 140), Size = new Size(80, 25) };
-            txtPass = new TextBox { Font = new Font("Microsoft YaHei", 10), Location = new Point(150, 140), Size = new Size(220, 25), PasswordChar = '*', PlaceholderText = "请输入密码" };
+            // 用户名输入
+            var userPanel = CreateInputPanel("用户名", 95);
+            txtUser = (TextBox)userPanel.Controls[1];
+            txtUser.PlaceholderText = "请输入用户名";
 
-            btnLogin = new Button
+            // 密码输入
+            var passPanel = CreateInputPanel("密  码", 145);
+            txtPass = (TextBox)passPanel.Controls[1];
+            txtPass.PasswordChar = '\u25CF';
+            txtPass.PlaceholderText = "请输入密码";
+
+            // 登录按钮
+            var btnLogin = new Button
             {
                 Text = "登  录",
                 Font = new Font("Microsoft YaHei", 11, FontStyle.Bold),
-                Location = new Point(150, 195),
-                Size = new Size(220, 40),
-                BackColor = Color.FromArgb(52, 152, 219),
+                Size = new Size(300, 42),
+                Location = new Point(40, 210),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(59, 130, 246),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                Cursor = Cursors.Hand
             };
             btnLogin.FlatAppearance.BorderSize = 0;
             btnLogin.Click += OnLogin;
 
+            // 底部提示
             var hint = new Label
             {
-                Text = "默认账号：admin/admin123 | teacher1/teacher123 | student1/student123",
+                Text = "默认账号：admin / teacher1 / student1  |  密码与账号对应",
                 Font = new Font("Microsoft YaHei", 8),
-                ForeColor = Color.Gray,
-                Location = new Point(50, 260),
-                Size = new Size(350, 40),
+                ForeColor = Color.FromArgb(160, 170, 180),
+                Size = new Size(300, 25),
+                Location = new Point(40, 270),
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            this.Controls.AddRange(new Control[] { title, lblUser, txtUser, lblPass, txtPass, btnLogin, hint });
+            card.Controls.AddRange(new Control[] { title, subtitle, userPanel, passPanel, btnLogin, hint });
+            this.Controls.Add(card);
             this.AcceptButton = btnLogin;
+        }
+
+        private Panel CreateInputPanel(string label, int y)
+        {
+            var panel = new Panel { Size = new Size(300, 42), Location = new Point(40, y), BackColor = Color.FromArgb(248, 250, 252) };
+            panel.Paint += (s, e) =>
+            {
+                var r = new Rectangle(0, panel.Height - 2, panel.Width, 2);
+                using var brush = new SolidBrush(Color.FromArgb(59, 130, 246));
+                e.Graphics.FillRectangle(brush, r);
+            };
+
+            var lbl = new Label { Text = label, Font = new Font("Microsoft YaHei", 9, FontStyle.Regular), ForeColor = Color.FromArgb(100, 110, 120), Size = new Size(55, 22), Location = new Point(8, 10), TextAlign = ContentAlignment.MiddleLeft };
+            var txt = new TextBox { Font = new Font("Microsoft YaHei", 10), Size = new Size(220, 22), Location = new Point(65, 10), BorderStyle = BorderStyle.None, BackColor = Color.FromArgb(248, 250, 252), ForeColor = Color.FromArgb(44, 62, 80) };
+            panel.Controls.Add(lbl);
+            panel.Controls.Add(txt);
+            return panel;
         }
 
         private void OnLogin(object? sender, EventArgs e)
@@ -85,23 +136,18 @@ namespace StudentGradeManager.Forms
                 MessageBox.Show("请输入用户名和密码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
             if (_auth.Login(u, p))
             {
                 var user = _auth.CurrentUser!;
                 var roleName = user.Role switch { "Admin" => "管理员", "Teacher" => "教师", "Student" => "学生", _ => user.Role };
-                MessageBox.Show("欢迎，" + user.FullName + "（" + roleName + "）！", "登录成功",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-
                 Form main = user.Role switch
                 {
                     "Admin" => new AdminMainForm(_auth, _studentSvc, _courseSvc, _gradeSvc, _statsSvc, _aiSvc),
                     "Teacher" => new TeacherMainForm(_auth, _studentSvc, _courseSvc, _gradeSvc, _statsSvc, _aiSvc),
                     _ => new StudentMainForm(_auth, _studentSvc, _courseSvc, _gradeSvc, _statsSvc, _aiSvc)
                 };
-
                 this.Hide();
-                main.FormClosed += (s, args) => this.Close();
+                main.FormClosed += (s2, args) => this.Close();
                 main.Show();
             }
             else
